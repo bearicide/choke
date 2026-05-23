@@ -19,6 +19,7 @@ input[type=file]{display:none}
 .pad.active{border-color:#ff3355;box-shadow:0 0 22px rgba(255,60,90,.45)}
 .pad.looping{border-color:#8a2eff;box-shadow:0 0 24px rgba(138,46,255,.45)}
 .pad.loaded{border-color:#59f3ff;box-shadow:0 0 18px rgba(89,243,255,.28)}
+.pad.choked{border-color:#ff003c;box-shadow:0 0 28px rgba(255,0,60,.55)}
 .pad.empty{opacity:.55;filter:saturate(.6)}
 .pad strong{font-size:1.6rem;letter-spacing:.08rem}
 .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
@@ -44,12 +45,39 @@ const pads=[];
 let audioCtx=null;
 function audio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}audioCtx.resume();return audioCtx;}
 function stopSource(src){try{if(src)src.stop();}catch(e){}}
-function chokeExcept(index){pads.forEach((p,i)=>{if(i!==index){stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');}});}
-function play(index,loopMode){const ctx=audio();const p=pads[index];if(!p.buffer)return;if(loopMode&&p.loop){stopSource(p.loop);p.loop=null;p.el.classList.remove('looping');return;}chokeExcept(index);if(!loopMode)stopSource(p.one);const src=ctx.createBufferSource();const gain=ctx.createGain();src.buffer=p.buffer;src.loop=loopMode;gain.gain.value=.9;src.connect(gain).connect(ctx.destination);src.start();if(loopMode){p.loop=src;p.el.classList.add('looping');}else{p.one=src;p.el.classList.add('active');setTimeout(()=>p.el.classList.remove('active'),140);}}
+function hardChoke(activeIndex){
+  pads.forEach((p,i)=>{
+    if(i!==activeIndex){
+      stopSource(p.one);
+      stopSource(p.loop);
+      p.one=null;
+      p.loop=null;
+      p.el.classList.remove('active','looping');
+      if(p.buffer){p.el.classList.add('choked');setTimeout(()=>p.el.classList.remove('choked'),120);}
+    }
+  });
+}
+function play(index,loopMode){
+  const ctx=audio();
+  const p=pads[index];
+  if(!p.buffer)return;
+  if(loopMode&&p.loop){stopSource(p.loop);p.loop=null;p.el.classList.remove('looping');return;}
+  hardChoke(index);
+  stopSource(p.one);
+  if(loopMode)stopSource(p.loop);
+  const src=ctx.createBufferSource();
+  const gain=ctx.createGain();
+  src.buffer=p.buffer;
+  src.loop=loopMode;
+  gain.gain.value=.9;
+  src.connect(gain).connect(ctx.destination);
+  src.start();
+  if(loopMode){p.loop=src;p.el.classList.add('looping');}else{p.one=src;p.el.classList.add('active');setTimeout(()=>p.el.classList.remove('active'),140);}
+}
 function makePads(){grid.innerHTML='';pads.length=0;for(let i=0;i<16;i++){const el=document.createElement('div');el.className='pad empty';el.innerHTML='<div><strong>PAD '+(i+1)+'</strong><div class="status">EMPTY</div><div class="wave"></div></div><div class="controls"><button class="trig">TRIG</button><button class="loop">LOOP</button><button class="stop">STOP</button></div>';grid.appendChild(el);const state={el,buffer:null,one:null,loop:null,status:el.querySelector('.status')};pads.push(state);el.querySelector('.trig').onclick=()=>play(i,false);el.querySelector('.loop').onclick=()=>play(i,true);el.querySelector('.stop').onclick=()=>{stopSource(state.one);stopSource(state.loop);state.one=null;state.loop=null;el.classList.remove('active','looping');};}}
 async function importAudio(file){const ctx=audio();const data=await file.arrayBuffer();const decoded=await ctx.decodeAudioData(data);const frames=Math.floor(decoded.length/16);for(let i=0;i<16;i++){const slice=ctx.createBuffer(decoded.numberOfChannels,frames,decoded.sampleRate);for(let ch=0;ch<decoded.numberOfChannels;ch++){const src=decoded.getChannelData(ch);const dst=slice.getChannelData(ch);const start=i*frames;for(let j=0;j<frames;j++)dst[j]=src[start+j]||0;}pads[i].buffer=slice;pads[i].status.textContent='SLICE '+(i+1)+' READY';pads[i].el.classList.remove('empty');pads[i].el.classList.add('loaded');}}
 document.getElementById('audio').onchange=e=>{const file=e.target.files[0];if(file)importAudio(file);};
-document.getElementById('panic').onclick=()=>pads.forEach(p=>{stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');});
+document.getElementById('panic').onclick=()=>pads.forEach(p=>{stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping','choked');});
 makePads();
 </script>
 </body>
