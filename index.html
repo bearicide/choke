@@ -6,25 +6,28 @@
 <title>CHOKE</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#050505;color:#63ff8f;font-family:Arial,sans-serif}
-header{padding:16px 20px;background:#000;border-bottom:3px solid #1aff73}
-h1{margin:0;font-size:3rem}
-#toolbar{display:flex;gap:10px;flex-wrap:wrap;padding:14px;background:#07110b;border-bottom:2px solid #123}
-button,label,input{padding:14px 16px;background:#08110b;color:#63ff8f;border:2px solid #1aff73;border-radius:12px;font-weight:700}
+body{margin:0;background:#040404;color:#7dff9d;font-family:Bahnschrift,Arial,sans-serif;background-image:radial-gradient(circle at top,#12341e,#020202 60%)}
+header{padding:18px 22px;background:#000;border-bottom:4px solid #1aff73;box-shadow:0 0 20px rgba(0,255,120,.08)}
+h1{margin:0;font-size:3.5rem;letter-spacing:.2rem;text-shadow:0 0 12px #1aff73}
+#toolbar{display:flex;gap:14px;flex-wrap:wrap;padding:16px;background:#07110b;border-bottom:2px solid #123}
+button,label,input{padding:16px 18px;background:linear-gradient(180deg,#101d14,#08110b);color:#7dff9d;border:2px solid #1aff73;border-radius:16px;font-weight:800;font-size:1rem}
+button:hover,label:hover{box-shadow:0 0 16px rgba(0,255,120,.18)}
 input[type=file]{display:none}
-#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:18px}
-.pad{background:#101510;border:3px solid #1aff73;border-radius:20px;padding:16px;min-height:220px;display:flex;flex-direction:column;justify-content:space-between}
-.pad.active{border-color:#ff3355}
-.pad.looping{border-color:#8a2eff;box-shadow:0 0 18px #8a2eff}
-.pad.empty{opacity:.65}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.controls button{padding:14px;border:none}
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;padding:22px}
+.pad{position:relative;background:linear-gradient(180deg,#101712,#09100c);border:3px solid #1aff73;border-radius:28px;padding:20px;min-height:320px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 0 24px rgba(0,255,120,.08), inset 0 0 20px rgba(0,255,120,.03)}
+.pad:before{content:'';position:absolute;inset:6px;border:1px solid rgba(0,255,120,.12);border-radius:20px;pointer-events:none}
+.pad.active{border-color:#ff3355;box-shadow:0 0 22px rgba(255,60,90,.45)}
+.pad.looping{border-color:#8a2eff;box-shadow:0 0 24px rgba(138,46,255,.45)}
+.pad.empty{opacity:.7}
+.pad strong{font-size:1.6rem;letter-spacing:.08rem}
+.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
+.controls button{padding:16px;border:none;border-radius:14px;font-size:.95rem}
 .trig{background:#1aff73;color:#000}
 .loop{background:#8a2eff;color:#fff}
 .stop{background:#8b1026;color:#fff}
-.wave{height:40px;background:#041008;border-radius:10px;margin-top:10px;border:1px solid rgba(0,255,120,.2)}
-.status{opacity:.75;margin-top:8px;font-size:.9rem}
-@media(max-width:900px){#grid{grid-template-columns:repeat(2,1fr)}h1{font-size:2rem}.pad{min-height:180px}}
+.wave{height:58px;background:#041008;border-radius:12px;margin-top:14px;border:1px solid rgba(0,255,120,.2);box-shadow:inset 0 0 12px rgba(0,255,120,.08)}
+.status{opacity:.8;margin-top:10px;font-size:1rem;letter-spacing:.04rem}
+@media(max-width:1100px){#grid{grid-template-columns:repeat(2,1fr)}h1{font-size:2.4rem}.pad{min-height:240px}}
 </style>
 </head>
 <body>
