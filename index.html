@@ -1,1 +1,106 @@
-<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'><title>CHOKE</title><style>*{box-sizing:border-box}body{margin:0;background:#050505;color:#63ff8f;font-family:Bahnschrift,Arial,sans-serif}header{padding:16px 20px;background:#000;border-bottom:3px solid #1aff73}h1{margin:0;font-size:3rem}#toolbar{display:flex;gap:10px;padding:14px;background:#07110b;border-bottom:2px solid #123;flex-wrap:wrap}button,input,label{padding:14px 16px;background:#08110b;color:#63ff8f;border:2px solid #1aff73;border-radius:12px;font-weight:700}input[type=file]{display:none}#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:18px}.pad{background:#101510;border:3px solid #1aff73;border-radius:20px;padding:16px;min-height:220px;display:flex;flex-direction:column;justify-content:space-between}.pad.active{border-color:#ff3355}.pad.looping{border-color:#8a2eff}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.controls button{padding:14px;border:none}.trig{background:#1aff73;color:#000}.loop{background:#8a2eff;color:#fff}.stop{background:#8b1026;color:#fff}.wave{height:40px;background:#041008;border-radius:10px;margin-top:10px;border:1px solid rgba(0,255,120,.2)}@media(max-width:900px){#grid{grid-template-columns:repeat(2,1fr)}h1{font-size:2rem}}</style></head><body><header><h1>CHOKE</h1></header><div id='toolbar'><button id='panic'>PANIC</button><label for='audio'>IMPORT AUDIO</label><input id='audio' type='file' accept='audio/*'><input value='120'></div><div id='grid'></div><script>const grid=document.getElementById('grid');for(let i=0;i<16;i++){const pad=document.createElement('div');pad.className='pad';pad.innerHTML='<div><strong>PAD '+(i+1)+'</strong><div class=wave></div></div><div class=controls><button class=trig>TRIG</button><button class=loop>LOOP</button><button class=stop>STOP</button></div>';grid.appendChild(pad);const trig=pad.querySelector('.trig');const loop=pad.querySelector('.loop');const stop=pad.querySelector('.stop');trig.onclick=()=>{document.querySelectorAll('.pad').forEach(p=>p.classList.remove('active'));pad.classList.add('active')};loop.onclick=()=>pad.classList.toggle('looping');stop.onclick=()=>{pad.classList.remove('active');pad.classList.remove('looping')}}document.getElementById('panic').onclick=()=>document.querySelectorAll('.pad').forEach(p=>p.classList.remove('active','looping'));</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CHOKE</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#050505;color:#63ff8f;font-family:Arial,sans-serif}
+header{padding:16px 20px;background:#000;border-bottom:3px solid #1aff73}
+h1{margin:0;font-size:3rem}
+#toolbar{display:flex;gap:10px;flex-wrap:wrap;padding:14px;background:#07110b;border-bottom:2px solid #123}
+button,label,input{padding:14px 16px;background:#08110b;color:#63ff8f;border:2px solid #1aff73;border-radius:12px;font-weight:700}
+input[type=file]{display:none}
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:18px}
+.pad{background:#101510;border:3px solid #1aff73;border-radius:20px;padding:16px;min-height:220px;display:flex;flex-direction:column;justify-content:space-between}
+.pad.active{border-color:#ff3355}
+.pad.looping{border-color:#8a2eff;box-shadow:0 0 18px #8a2eff}
+.pad.empty{opacity:.65}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.controls button{padding:14px;border:none}
+.trig{background:#1aff73;color:#000}
+.loop{background:#8a2eff;color:#fff}
+.stop{background:#8b1026;color:#fff}
+.wave{height:40px;background:#041008;border-radius:10px;margin-top:10px;border:1px solid rgba(0,255,120,.2)}
+.status{opacity:.75;margin-top:8px;font-size:.9rem}
+@media(max-width:900px){#grid{grid-template-columns:repeat(2,1fr)}h1{font-size:2rem}.pad{min-height:180px}}
+</style>
+</head>
+<body>
+<header><h1>CHOKE</h1></header>
+<div id="toolbar">
+<button id="panic">PANIC</button>
+<label for="audio">IMPORT AUDIO</label>
+<input id="audio" type="file" accept="audio/*">
+<input id="bpm" type="number" value="120" min="40" max="240">
+</div>
+<div id="grid"></div>
+<script>
+const grid=document.getElementById('grid');
+const pads=[];
+let audioCtx=null;
+function audio(){
+  if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}
+  audioCtx.resume();
+  return audioCtx;
+}
+function stopSource(src){try{if(src)src.stop();}catch(e){}}
+function chokeExcept(index){
+  pads.forEach((p,i)=>{if(i!==index){stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');}});
+}
+function play(index,loopMode){
+  const ctx=audio();
+  const p=pads[index];
+  if(!p.buffer)return;
+  if(loopMode && p.loop){stopSource(p.loop);p.loop=null;p.el.classList.remove('looping');return;}
+  chokeExcept(index);
+  if(!loopMode)stopSource(p.one);
+  const src=ctx.createBufferSource();
+  const gain=ctx.createGain();
+  src.buffer=p.buffer;
+  src.loop=loopMode;
+  gain.gain.value=.9;
+  src.connect(gain).connect(ctx.destination);
+  src.start();
+  if(loopMode){p.loop=src;p.el.classList.add('looping');}else{p.one=src;p.el.classList.add('active');setTimeout(()=>p.el.classList.remove('active'),140);}
+}
+function makePads(){
+  grid.innerHTML='';
+  pads.length=0;
+  for(let i=0;i<16;i++){
+    const el=document.createElement('div');
+    el.className='pad empty';
+    el.innerHTML='<div><strong>PAD '+(i+1)+'</strong><div class="status">EMPTY</div><div class="wave"></div></div><div class="controls"><button class="trig">TRIG</button><button class="loop">LOOP</button><button class="stop">STOP</button></div>';
+    grid.appendChild(el);
+    const state={el,buffer:null,one:null,loop:null,status:el.querySelector('.status')};
+    pads.push(state);
+    el.querySelector('.trig').onclick=()=>play(i,false);
+    el.querySelector('.loop').onclick=()=>play(i,true);
+    el.querySelector('.stop').onclick=()=>{stopSource(state.one);stopSource(state.loop);state.one=null;state.loop=null;el.classList.remove('active','looping');};
+  }
+}
+async function importAudio(file){
+  const ctx=audio();
+  const data=await file.arrayBuffer();
+  const decoded=await ctx.decodeAudioData(data);
+  const frames=Math.floor(decoded.length/16);
+  for(let i=0;i<16;i++){
+    const slice=ctx.createBuffer(decoded.numberOfChannels,frames,decoded.sampleRate);
+    for(let ch=0;ch<decoded.numberOfChannels;ch++){
+      const src=decoded.getChannelData(ch);
+      const dst=slice.getChannelData(ch);
+      const start=i*frames;
+      for(let j=0;j<frames;j++)dst[j]=src[start+j]||0;
+    }
+    pads[i].buffer=slice;
+    pads[i].status.textContent='SLICE '+(i+1)+' READY';
+    pads[i].el.classList.remove('empty');
+  }
+}
+document.getElementById('audio').onchange=e=>{const file=e.target.files[0];if(file)importAudio(file);};
+document.getElementById('panic').onclick=()=>pads.forEach(p=>{stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');});
+makePads();
+</script>
+</body>
+</html>
