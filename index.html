@@ -14,17 +14,16 @@ button,label,input{padding:16px 18px;background:linear-gradient(180deg,#101d14,#
 button:hover,label:hover{box-shadow:0 0 16px rgba(0,255,120,.18)}
 input[type=file]{display:none}
 #grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;padding:22px}
-.pad{position:relative;background:linear-gradient(180deg,#101712,#09100c);border:3px solid #1aff73;border-radius:28px;padding:20px;min-height:320px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 0 24px rgba(0,255,120,.08), inset 0 0 20px rgba(0,255,120,.03)}
+.pad{position:relative;background:linear-gradient(180deg,#101712,#09100c);border:3px solid #1aff73;border-radius:28px;padding:20px;min-height:320px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 0 24px rgba(0,255,120,.08), inset 0 0 20px rgba(0,255,120,.03);transition:.12s}
 .pad:before{content:'';position:absolute;inset:6px;border:1px solid rgba(0,255,120,.12);border-radius:20px;pointer-events:none}
 .pad.active{border-color:#ff3355;box-shadow:0 0 22px rgba(255,60,90,.45)}
 .pad.looping{border-color:#8a2eff;box-shadow:0 0 24px rgba(138,46,255,.45)}
-.pad.empty{opacity:.7}
+.pad.loaded{border-color:#59f3ff;box-shadow:0 0 18px rgba(89,243,255,.28)}
+.pad.empty{opacity:.55;filter:saturate(.6)}
 .pad strong{font-size:1.6rem;letter-spacing:.08rem}
 .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px}
 .controls button{padding:16px;border:none;border-radius:14px;font-size:.95rem}
-.trig{background:#1aff73;color:#000}
-.loop{background:#8a2eff;color:#fff}
-.stop{background:#8b1026;color:#fff}
+.trig{background:#1aff73;color:#000}.loop{background:#8a2eff;color:#fff}.stop{background:#8b1026;color:#fff}
 .wave{height:58px;background:#041008;border-radius:12px;margin-top:14px;border:1px solid rgba(0,255,120,.2);box-shadow:inset 0 0 12px rgba(0,255,120,.08)}
 .status{opacity:.8;margin-top:10px;font-size:1rem;letter-spacing:.04rem}
 @media(max-width:1100px){#grid{grid-template-columns:repeat(2,1fr)}h1{font-size:2.4rem}.pad{min-height:240px}}
@@ -43,64 +42,12 @@ input[type=file]{display:none}
 const grid=document.getElementById('grid');
 const pads=[];
 let audioCtx=null;
-function audio(){
-  if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}
-  audioCtx.resume();
-  return audioCtx;
-}
+function audio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}audioCtx.resume();return audioCtx;}
 function stopSource(src){try{if(src)src.stop();}catch(e){}}
-function chokeExcept(index){
-  pads.forEach((p,i)=>{if(i!==index){stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');}});
-}
-function play(index,loopMode){
-  const ctx=audio();
-  const p=pads[index];
-  if(!p.buffer)return;
-  if(loopMode && p.loop){stopSource(p.loop);p.loop=null;p.el.classList.remove('looping');return;}
-  chokeExcept(index);
-  if(!loopMode)stopSource(p.one);
-  const src=ctx.createBufferSource();
-  const gain=ctx.createGain();
-  src.buffer=p.buffer;
-  src.loop=loopMode;
-  gain.gain.value=.9;
-  src.connect(gain).connect(ctx.destination);
-  src.start();
-  if(loopMode){p.loop=src;p.el.classList.add('looping');}else{p.one=src;p.el.classList.add('active');setTimeout(()=>p.el.classList.remove('active'),140);}
-}
-function makePads(){
-  grid.innerHTML='';
-  pads.length=0;
-  for(let i=0;i<16;i++){
-    const el=document.createElement('div');
-    el.className='pad empty';
-    el.innerHTML='<div><strong>PAD '+(i+1)+'</strong><div class="status">EMPTY</div><div class="wave"></div></div><div class="controls"><button class="trig">TRIG</button><button class="loop">LOOP</button><button class="stop">STOP</button></div>';
-    grid.appendChild(el);
-    const state={el,buffer:null,one:null,loop:null,status:el.querySelector('.status')};
-    pads.push(state);
-    el.querySelector('.trig').onclick=()=>play(i,false);
-    el.querySelector('.loop').onclick=()=>play(i,true);
-    el.querySelector('.stop').onclick=()=>{stopSource(state.one);stopSource(state.loop);state.one=null;state.loop=null;el.classList.remove('active','looping');};
-  }
-}
-async function importAudio(file){
-  const ctx=audio();
-  const data=await file.arrayBuffer();
-  const decoded=await ctx.decodeAudioData(data);
-  const frames=Math.floor(decoded.length/16);
-  for(let i=0;i<16;i++){
-    const slice=ctx.createBuffer(decoded.numberOfChannels,frames,decoded.sampleRate);
-    for(let ch=0;ch<decoded.numberOfChannels;ch++){
-      const src=decoded.getChannelData(ch);
-      const dst=slice.getChannelData(ch);
-      const start=i*frames;
-      for(let j=0;j<frames;j++)dst[j]=src[start+j]||0;
-    }
-    pads[i].buffer=slice;
-    pads[i].status.textContent='SLICE '+(i+1)+' READY';
-    pads[i].el.classList.remove('empty');
-  }
-}
+function chokeExcept(index){pads.forEach((p,i)=>{if(i!==index){stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');}});}
+function play(index,loopMode){const ctx=audio();const p=pads[index];if(!p.buffer)return;if(loopMode&&p.loop){stopSource(p.loop);p.loop=null;p.el.classList.remove('looping');return;}chokeExcept(index);if(!loopMode)stopSource(p.one);const src=ctx.createBufferSource();const gain=ctx.createGain();src.buffer=p.buffer;src.loop=loopMode;gain.gain.value=.9;src.connect(gain).connect(ctx.destination);src.start();if(loopMode){p.loop=src;p.el.classList.add('looping');}else{p.one=src;p.el.classList.add('active');setTimeout(()=>p.el.classList.remove('active'),140);}}
+function makePads(){grid.innerHTML='';pads.length=0;for(let i=0;i<16;i++){const el=document.createElement('div');el.className='pad empty';el.innerHTML='<div><strong>PAD '+(i+1)+'</strong><div class="status">EMPTY</div><div class="wave"></div></div><div class="controls"><button class="trig">TRIG</button><button class="loop">LOOP</button><button class="stop">STOP</button></div>';grid.appendChild(el);const state={el,buffer:null,one:null,loop:null,status:el.querySelector('.status')};pads.push(state);el.querySelector('.trig').onclick=()=>play(i,false);el.querySelector('.loop').onclick=()=>play(i,true);el.querySelector('.stop').onclick=()=>{stopSource(state.one);stopSource(state.loop);state.one=null;state.loop=null;el.classList.remove('active','looping');};}}
+async function importAudio(file){const ctx=audio();const data=await file.arrayBuffer();const decoded=await ctx.decodeAudioData(data);const frames=Math.floor(decoded.length/16);for(let i=0;i<16;i++){const slice=ctx.createBuffer(decoded.numberOfChannels,frames,decoded.sampleRate);for(let ch=0;ch<decoded.numberOfChannels;ch++){const src=decoded.getChannelData(ch);const dst=slice.getChannelData(ch);const start=i*frames;for(let j=0;j<frames;j++)dst[j]=src[start+j]||0;}pads[i].buffer=slice;pads[i].status.textContent='SLICE '+(i+1)+' READY';pads[i].el.classList.remove('empty');pads[i].el.classList.add('loaded');}}
 document.getElementById('audio').onchange=e=>{const file=e.target.files[0];if(file)importAudio(file);};
 document.getElementById('panic').onclick=()=>pads.forEach(p=>{stopSource(p.one);stopSource(p.loop);p.one=null;p.loop=null;p.el.classList.remove('active','looping');});
 makePads();
