@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CHOKE — BY MATTBEAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+margin:0;
+padding:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:#060006;
+font-family:'Teko',sans-serif;
+color:#39ff14;
+touch-action:manipulation;
+}
+body{
+display:flex;
+flex-direction:column;
+background:
+radial-gradient(circle at top,#250038 0%,#090009 55%,#000 100%);
+}
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:1vh 1vw;
+border-bottom:3px solid #39ff14;
+background:rgba(0,0,0,.45);
+box-shadow:0 0 30px rgba(57,255,20,.15);
+}
+.logo{
+font-size:clamp(2rem,5vw,5rem);
+letter-spacing:.15em;
+color:#b84dff;
+text-shadow:0 0 20px #b84dff;
+}
+.status{
+display:flex;
+gap:1rem;
+font-size:clamp(1rem,2vw,2rem);
+}
+.waveform{
+height:18vh;
+margin:1vh 1vw;
+border:4px solid #8b31ff;
+background:linear-gradient(180deg,#120018,#000);
+position:relative;
+overflow:hidden;
+box-shadow:0 0 35px rgba(139,49,255,.35);
+}
+.waveform::before{
+content:'';
+position:absolute;
+inset:0;
+background:repeating-linear-gradient(90deg,transparent 0px,transparent 14px,rgba(57,255,20,.08) 15px,transparent 16px);
+animation:scan 8s linear infinite;
+}
+.waveform::after{
+content:'SYNCED WAVEFORM / IMPORT CHOP ZONE';
+position:absolute;
+inset:0;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:clamp(1.4rem,3vw,3.4rem);
+letter-spacing:.12em;
+color:rgba(57,255,20,.75);
+text-shadow:0 0 18px #39ff14;
+}
+@keyframes scan{from{transform:translateX(0)}to{transform:translateX(80px)}}
+.grid{
+flex:1;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:1vh;
+padding:1vh 1vw;
+min-height:0;
+}
+.pad{
+background:linear-gradient(180deg,#220028,#0c000f);
+border:4px solid #39ff14;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+padding:.6rem;
+box-shadow:0 0 20px rgba(57,255,20,.18),inset 0 0 15px rgba(184,77,255,.15);
+transition:.08s;
+min-height:0;
+clip-path:polygon(5% 0,100% 0,100% 86%,94% 100%,0 100%,0 14%);
+}
+.pad:active,.pad.active{
+transform:scale(.985);
+background:linear-gradient(180deg,#3d0052,#18001f);
+box-shadow:0 0 35px rgba(57,255,20,.45),0 0 12px rgba(184,77,255,.45);
+}
+.pad-title{
+font-size:clamp(1.3rem,2vw,2.4rem);
+letter-spacing:.08em;
+color:#fff;
+}
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:.5rem;
+}
+button{
+border:none;
+background:#8b31ff;
+color:#fff;
+font-family:'Teko',sans-serif;
+font-size:clamp(1rem,1.8vw,2rem);
+padding:.5rem;
+font-weight:700;
+letter-spacing:.08em;
+cursor:pointer;
+min-height:48px;
+box-shadow:0 0 10px rgba(139,49,255,.45);
+clip-path:polygon(8% 0,100% 0,100% 80%,92% 100%,0 100%,0 20%);
+touch-action:manipulation;
+}
+button:hover{filter:brightness(1.1)}
+button.loop{background:#39ff14;color:#000}
+button.off{background:#5e0000}
+footer{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:.7rem 1rem;
+font-size:clamp(1rem,1.5vw,1.6rem);
+border-top:3px solid #39ff14;
+background:#000;
+}
+footer a{color:#39ff14;text-decoration:none}
+.admin{
+position:fixed;
+top:0;
+right:-340px;
+width:340px;
+height:100%;
+background:#110015;
+border-left:4px solid #39ff14;
+padding:1rem;
+transition:.25s;
+z-index:99;
+box-shadow:-10px 0 30px rgba(0,0,0,.65);
+}
+.admin.open{right:0}
+.admin h2{font-size:2rem;margin-top:0;color:#b84dff}
+.admin p{font-size:1.2rem;line-height:1.2}
+@media(max-width:900px){
+.grid{grid-template-columns:repeat(2,1fr)}
+.waveform{height:14vh}
+.status{gap:.5rem;font-size:clamp(.9rem,3vw,1.3rem)}
+}
+@media(max-height:700px){
+.waveform{height:12vh}
+button{min-height:34px;padding:.25rem}
+.pad-title{font-size:clamp(1rem,2vw,1.8rem)}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">CHOKE</div>
+<div class="status">
+<div>BPM 128</div>
+<div>SYNC LOCK</div>
+<div>CPU 08%</div>
+</div>
+</header>
+<div class="waveform"></div>
+<section class="grid" id="grid"></section>
+<aside class="admin" id="admin">
+<h2>ADMIN</h2>
+<p>CTRL + SHIFT + A</p>
+<p>• BPM CONTROL</p>
+<p>• CHOKE ROUTING</p>
+<p>• IMPORT MANAGER</p>
+<p>• VISUAL INTENSITY</p>
+<p>• TOUCH DEBUG</p>
+<p>• HARD RESYNC</p>
+</aside>
+<footer>
+<div>CHOKE — BY MATTBEAR</div>
+<a href="https://bearicide.github.io" target="_blank">bearicide.github.io</a>
+</footer>
+<script>
+const names=['KICK','SNARE','HAT','CLAP','BASS','SYNTH','VOX','AMBI','GLITCH','REVERSE','TAPE','FREEZE','CHOKE','STATIC','SIREN','OVERLOAD'];
+const keys=['q','w','e','r','a','s','d','f','z','x','c','v','1','2','3','4'];
+const grid=document.getElementById('grid');
+const admin=document.getElementById('admin');
+const pads=[];
+let audioCtx;
+let master;
+function initAudio(){
+ if(audioCtx)return;
+ audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ master=audioCtx.createGain();
+ master.gain.value=.35;
+ master.connect(audioCtx.destination);
+}
+function blip(i){
+ initAudio();
+ audioCtx.resume();
+ const osc=audioCtx.createOscillator();
+ const gain=audioCtx.createGain();
+ const freqs=[55,110,220,330,82,164,246,98,440,523,392,660,70,760,880,44];
+ osc.type=i%3===0?'sawtooth':i%3===1?'square':'triangle';
+ osc.frequency.value=freqs[i]||220;
+ gain.gain.setValueAtTime(.5,audioCtx.currentTime);
+ gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.18);
+ osc.connect(gain); gain.connect(master); osc.start(); osc.stop(audioCtx.currentTime+.18);
+}
+function hitPad(i){
+ const pad=pads[i]; if(!pad)return;
+ pad.classList.add('active');
+ blip(i);
+ if(navigator.vibrate) navigator.vibrate(20);
+ setTimeout(()=>pad.classList.remove('active'),120);
+}
+names.forEach((name,i)=>{
+ const pad=document.createElement('div');
+ pad.className='pad';
+ pad.innerHTML=`<div class="pad-title">${keys[i].toUpperCase()} · ${name}</div><div class="controls"><button>ON</button><button class="loop">LOOP</button><button>TEST</button><button class="off">OFF</button></div>`;
+ pad.addEventListener('pointerdown',(e)=>{e.preventDefault();hitPad(i);});
+ pad.addEventListener('contextmenu',(e)=>{e.preventDefault();hitPad(i);});
+ pads.push(pad); grid.appendChild(pad);
+});
+document.addEventListener('keydown',(e)=>{
+ if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='a'){admin.classList.toggle('open');return;}
+ if(e.code==='Space'){e.preventDefault();document.body.style.filter='brightness(1.55) hue-rotate(-25deg)';setTimeout(()=>document.body.style.filter='',90);return;}
+ const idx=keys.indexOf(e.key.toLowerCase());
+ if(idx>-1)hitPad(idx);
+});
+document.addEventListener('pointerdown',initAudio,{once:true});
+</script>
+</body>
+</html>
